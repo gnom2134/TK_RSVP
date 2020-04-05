@@ -10,19 +10,15 @@ class RSVPSystem:
         self.current_word = 0
 
     def set_wps(self, wps):
-        self.wps = wps
-        self.time_gap = 60. / wps
+        self.wps = max(wps, 1)
+        self.time_gap = 60. / self.wps
 
-    def next_word(self):
-        self.current_word += 1
-        if self.current_word > len(self.text):
-            return ''
-        else:
-            return self.text[self.current_word]
+    def get_word(self):
+        return self.text[self.current_word]
 
     def change_wps(self, delta):
         self.wps += delta
-        self.time_gap = 60. / self.wps
+        self.set_wps(self.wps)
 
     def get_time_gap(self):
         return self.time_gap
