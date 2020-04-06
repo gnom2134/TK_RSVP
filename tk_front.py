@@ -1,5 +1,4 @@
 from tkinter import *
-from tkinter.font import Font
 from rsvp_system import RSVPSystem
 
 
