@@ -18,6 +18,7 @@ class RSVPApp:
                            width=0, height=0, bg='white', anchor='w')
 
         self.wps_text = StringVar()
+        self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
         self.wps_label = Label(self.root, textvariable=self.wps_text, font=('symbol', '18', 'bold'), width=0, height=0,
                                bg='white', anchor='w')
 
@@ -48,8 +49,10 @@ class RSVPApp:
                 self.update_word()
         elif event.keysym == 'Up':
             self.rsvp.change_wps(10)
+            self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
         elif event.keysym == 'Down':
             self.rsvp.change_wps(-10)
+            self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
         elif event.keysym == 'Right':
             self.stop()
             self.rsvp.step(1)
@@ -81,7 +84,6 @@ class RSVPApp:
         self.rsvp.step(1)
         word = self.rsvp.get_word()
         self.text.set(word)
-        self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
         if self.after != -1:
             self.root.after_cancel(self.after)
         self.after = self.root.after(self.rsvp.get_time_gap(), self.update_word)
