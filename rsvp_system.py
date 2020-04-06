@@ -23,6 +23,9 @@ class RSVPSystem:
     def get_time_gap(self):
         return int(self.time_gap)
 
+    def get_wps(self):
+        return int(self.wps)
+
     def step(self, x):
         self.current_word += x
         self.current_word = max(self.current_word, 0) % len(self.text)
