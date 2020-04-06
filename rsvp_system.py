@@ -14,7 +14,7 @@ class RSVPSystem:
         self.time_gap = (60. / self.wps) * 10**3
 
     def get_word(self):
-        return self.text[self.current_word]
+        return self.__add_spaces(self.text[self.current_word])
 
     def change_wps(self, delta):
         self.wps += delta
@@ -29,3 +29,17 @@ class RSVPSystem:
     def step(self, x):
         self.current_word += x
         self.current_word = max(self.current_word, 0) % len(self.text)
+
+    def __add_spaces(self, word):
+        wl = len(word)
+        if wl == 1:
+            bias = 1
+        elif 1 < wl < 6:
+            bias = 2
+        elif 5 < wl < 10:
+            bias = 3
+        elif 9 < wl < 14:
+            bias = 4
+        else:
+            bias = 5
+        return ' ' * (6 - bias) + word
