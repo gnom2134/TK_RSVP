@@ -1,13 +1,42 @@
+import os
+import pickle
+
+
 class RSVPSystem:
-    def __init__(self):
-        self.text = ['']
+    def __init__(self, storage_dir):
+        self.storage_file = os.path.join(storage_dir, '.rsvp_settings')
+        if '.rsvp_settings' in os.listdir(storage_dir):
+            with open(self.storage_file, 'rb') as file:
+                self.file_to_word = pickle.load(file)
+            self.current_file = list(self.file_to_word.keys())[0]
+            self.current_word = self.file_to_word[self.current_file]
+            try:
+                with open(self.current_file, 'r') as file:
+                    self.text = file.read().split()
+            except IOError:
+                self.text = 'FILE NOT FOUND!'.split()
+        else:
+            self.current_file = '__base__'
+            self.file_to_word = {}
+            self.current_word = ''
+            self.text = ['']
+            self.current_word = 0
         self.wps = 250
         self.time_gap = (60. / self.wps) * 10**3
-        self.current_word = 0
 
-    def set_text(self, text):
-        self.text = text.split()
-        self.current_word = 0
+    def set_text(self, new_file):
+        self.file_to_word[self.current_file] = self.current_word
+        self.current_file = new_file
+        try:
+            with open(new_file, 'r') as file:
+                self.text = file.read().split()
+        except IOError:
+            self.text = 'FILE NOT FOUND!'.split()
+            self.current_file = '__base__'
+        if new_file in self.file_to_word:
+            self.current_word = self.file_to_word[new_file]
+        else:
+            self.current_word = 0
 
     def set_wps(self, wps):
         self.wps = max(wps, 1)
@@ -30,7 +59,13 @@ class RSVPSystem:
         self.current_word += x
         self.current_word = max(self.current_word, 0) % len(self.text)
 
-    def __add_spaces(self, word):
+    def __del__(self):
+        self.file_to_word[self.current_file] = self.current_word
+        with open(self.storage_file, 'wb') as file:
+            pickle.dump(self.file_to_word, file)
+
+    @staticmethod
+    def __add_spaces(word):
         wl = len(word)
         if wl == 1:
             bias = 1

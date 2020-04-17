@@ -1,53 +1,51 @@
-from tkinter import *
+import tkinter
+from tkinter import filedialog
 from rsvp_system import RSVPSystem
 
 
 class RSVPApp:
-    def __init__(self):
+    def __init__(self, storage_dir):
         font = ('Symbol', 19)
 
-        self.root = Tk()
-        self.root.geometry('500x190')
+        self.root = tkinter.Tk()
+        self.root.geometry('500x160')
 
-        self.rsvp = RSVPSystem()
+        self.rsvp = RSVPSystem(storage_dir)
         self.is_running = False
 
         self.root.bind('<Key>', self.key_press)
 
-        self.ar_up_label = Label(self.root, text='     \u21e7', width=0, height=0, anchor='w', fg='red',
-                                 font=font)
-        self.ar_down_label = Label(self.root, text='     \u21e9', width=0, height=0, anchor='w', fg='red',
-                                   font=font)
+        self.ar_up_label = tkinter.Label(self.root, text='     \u21e7', width=0, height=0, anchor='w', fg='red',
+                                         font=font)
+        self.ar_down_label = tkinter.Label(self.root, text='     \u21e9', width=0, height=0, anchor='w', fg='red',
+                                           font=font)
 
-        self.text = StringVar()
+        self.text = tkinter.StringVar()
         self.text.set('')
-        self.label = Label(self.root, textvariable=self.text, font=font,
-                           width=0, height=0, anchor='w', bg='white')
+        self.label = tkinter.Label(self.root, textvariable=self.text, font=font,
+                                   width=0, height=0, anchor='w', bg='white')
 
-        self.wps_text = StringVar()
-        self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
-        self.wps_label = Label(self.root, textvariable=self.wps_text, font=font, width=0, height=0,
-                               bg='white', anchor='w')
+        self.wps_text = tkinter.StringVar()
+        self.wps_text.set('WPM: ' + str(self.rsvp.get_wps()))
+        self.wps_label = tkinter.Label(self.root, textvariable=self.wps_text, font=font, width=0, height=0,
+                                       bg='white', anchor='w')
 
-        self.frame = Frame(self.root, width=0, height=0)
+        self.frame = tkinter.Frame(self.root, width=0, height=0)
         self.after = -1
-        self.button_start = Button(self.frame, text='Run', font=font, command=self.start,
-                                   width=0, height=0, anchor='w')
-        self.button_stop = Button(self.frame, text='Stop', font=font, command=self.stop,
-                                  width=0, height=0, anchor='w')
+        self.button_start = tkinter.Button(self.frame, text='Pick a file', font=font, command=self.start,
+                                           width=0, height=0, anchor='w')
+        self.button_stop = tkinter.Button(self.frame, text='Stop', font=font, command=self.stop,
+                                          width=0, height=0, anchor='w')
 
-        self.entry = Entry(self.root, font=font)
-        self.entry.insert(0, 'text.txt')
+        self.ar_down_label.pack(fill=tkinter.BOTH, padx=100)
+        self.label.pack(fill=tkinter.BOTH, padx=100)
+        self.ar_up_label.pack(fill=tkinter.BOTH, padx=100)
+        self.button_start.pack(fill=tkinter.BOTH, side=tkinter.LEFT, expand=True)
+        self.button_stop.pack(fill=tkinter.BOTH, side=tkinter.LEFT, expand=True)
+        self.frame.pack(fill=tkinter.BOTH)
+        self.wps_label.pack(fill=tkinter.BOTH)
 
-        self.ar_down_label.pack(fill=BOTH)
-        self.label.pack(fill=BOTH)
-        self.ar_up_label.pack(fill=BOTH)
-        self.button_start.pack(fill=BOTH, side=LEFT, expand=True)
-        self.button_stop.pack(fill=BOTH, side=LEFT, expand=True)
-        self.frame.pack(fill=BOTH)
-        self.entry.pack(fill=BOTH)
-        self.wps_label.pack(fill=BOTH)
-
+    def run(self):
         self.root.mainloop()
 
     def key_press(self, event):
@@ -58,10 +56,10 @@ class RSVPApp:
                 self.__update_word()
         elif event.keysym == 'Up':
             self.rsvp.change_wps(10)
-            self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
+            self.wps_text.set('WPM: ' + str(self.rsvp.get_wps()))
         elif event.keysym == 'Down':
             self.rsvp.change_wps(-10)
-            self.wps_text.set('WPS: ' + str(self.rsvp.get_wps()))
+            self.wps_text.set('WPM: ' + str(self.rsvp.get_wps()))
         elif event.keysym == 'Right':
             self.stop()
             self.rsvp.step(1)
@@ -75,12 +73,13 @@ class RSVPApp:
         self.rsvp.set_text(text)
 
     def start(self):
-        filename = self.entry.get()
-        try:
-            with open(filename, 'r') as file:
-                self.set_text(file.read())
-        except FileNotFoundError:
-            self.set_text('FILE NOT FOUND!')
+        self.stop()
+        filename = filedialog.askopenfilename(initialdir="/", title="Select file", parent=self.root,
+                                              filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+        if filename == ():
+            self.rsvp.set_text('__false_value__')
+        else:
+            self.rsvp.set_text(filename)
         self.text.set(self.rsvp.get_word())
         self.__reset_after()
 
@@ -93,9 +92,12 @@ class RSVPApp:
         self.rsvp.step(1)
         word = self.rsvp.get_word()
         self.text.set(word)
-        self.__reset_after()
+        self.__reset_after(len(word.strip()) > 12)
 
-    def __reset_after(self):
+    def __reset_after(self, add_time=False):
         if self.after != -1:
             self.root.after_cancel(self.after)
-        self.after = self.root.after(self.rsvp.get_time_gap(), self.__update_word)
+        if add_time:
+            self.after = self.root.after(int(self.rsvp.get_time_gap() * 1.5), self.__update_word)
+        else:
+            self.after = self.root.after(self.rsvp.get_time_gap(), self.__update_word)
